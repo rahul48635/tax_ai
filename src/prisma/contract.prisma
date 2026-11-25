@@ -1,0 +1,51 @@
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  pan       String?
+  documents Document[]
+  returns   Return[]
+  approvals Approval[]
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  fileName  String
+  data      Bytes    // AES-256-GCM ciphertext
+  iv        String   // hex
+  authTag   String   // hex
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Return {
+  id          String     @id @default(cuid())
+  userId      String
+  status      String     @default("draft")
+  income      Json
+  computation Json
+  ackNumber   String?
+  submittedAt DateTime?
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Approval {
+  id         String    @id @default(cuid())
+  userId     String
+  step       String
+  payload    Json
+  approved   Boolean?  // null = pending
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, approved])
+}
